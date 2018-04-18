@@ -16,7 +16,7 @@ Also copy the start and stop scripts into `/usr/local/bin`.
 
 	cp *.sh /usr/local/bin
 
-By default (ie. unless you customize the `.service` files), the services will fail to start until you configure them. (`man systemd.service` should serve as a comprehensive source of information on how to customize these files.)
+By default (ie. unless you customize the `.service` files), the services will fail to start until you configure them.
 
 ## Configuring the services
 
