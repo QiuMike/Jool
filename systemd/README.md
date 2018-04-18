@@ -1,67 +1,47 @@
-The `systemd` directory includes the .service template files required by systemd in order to execute a service that configures Jool at boot. 
+# systemd
 
-The systemd service allows to execute a single command (for example `/sbin/modprobe jool pool6=64:ff9b::/96`) or a whole bash script so you could include network interfaces' configuration previous to Jool. 
+The `systemd` directory includes `.service` files that can be used as templates for hooking up systemd services that start Jool on boot.
 
-I recommend to create a service for each Jool mode (NAT64 and SIIT)
+## Installing SIIT Jool and NAT64 Jool as systemd services
 
+First, install Jool's binaries normally. ([Kernel modules](https://jool.mx/en/install-mod.html) and [userspace applications](https://jool.mx/en/install-usr.html).)
 
-# How to configure Jool/Jool SIIT systemd service
+Then, copy the service unit configuration(s) that you need into the service files directory of your distro (Usually `/etc/systemd/system`).
 
-1. Copy the jool.service/jool_siit.service file to `/etc/systemd/system/`. The file should look something like this:
+`jool_siit.service` is the SIIT service and `jool.service` is the NAT64 service. You can install both if you want.
 
-        [Unit]
-		Description=Jool NAT64 Configuration Service
-		After=network.target
-		
-		[Service]
-		Type=oneshot
-		ExecStartPre=/sbin/modprobe jool
-		ExecStart=/usr/local/bin/jool --file /etc/jool.conf
+	cp *.service /etc/systemd/system
 
-		[Install]
-		WantedBy=multi-user.target
-		
-2. Edit the `Service` section in .service file according to your Jool configuration. You can configure just one command/script to run at start (ExecStart) or a list of pre-start commands (ExecStartPre). 
+Also copy the start and stop scripts into `/usr/local/bin`.
 
-	Single command
-	
-		[Service]
-		Type=oneshot
-		ExecStart=/sbin/modprobe jool pool6=64:ff9b::/96 
-				
-				
-	Multiple commands
-	
-		[Service]
-		Type=oneshot
-		ExecStartPre=/sbin/modprobe jool
-		ExecStart=/usr/local/bin/jool --file /etc/jool.conf
-		
-	where jool.conf is a json file including atomic configuration:
-	
-		{
-			"pool6": "64:ff9b::/96"
-		}
-	
-If you want to use the atomic configuration, you can use the example files jool.conf and jool_siit.conf and edit the file path in the ExecStart command.
-	
-3. Reload the systemd daemon  
+	cp *.sh /usr/local/bin
 
-		systemctl daemon-reload
+By default (ie. unless you customize the `.service` files), the services will fail to start until you configure them. (`man systemd.service` should serve as a comprehensive source of information on how to customize these files.)
 
-4. Start service
-	
-		systemctl start jool.service
+## Configuring the services
 
-		systemctl start jool_siit.service
-	
-5. Enable service in systemd, in order to load at boot 
+`jool_siit.conf` is a sample configuration for the SIIT service, and `jool.conf` is a sample configuration for the NAT64 service. The units expect to find their respective file in the `/etc/jool` directory.
 
-		systemctl enable jool.service
-	
-		systemctl enable jool_siit.service
+	mkdir /etc/jool
+	cp *.conf /etc/jool
 
-6. Reboot and check if Jool was configured.
+Tweak the contents of these files as you see fit. They follow the [atomic configuration](https://jool.mx/en/config-atomic.html) format.
 
+## Starting and enabling the services
 
-For more information about systemd, please check the following link https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/System_Administrators_Guide/sect-Managing_Services_with_systemd-Unit_Files.html
+Reload the systemd daemon (Note: I actually found this step to be unnecesary the first time, but YMMV):
+
+	systemctl daemon-reload
+
+Start the service (ie. Try it out now):
+
+	systemctl start jool.service
+
+	systemctl start jool_siit.service
+
+"Enable" the service (ie. set it up to start on boot):
+
+	systemctl enable jool.service
+
+	systemctl enable jool_siit.service
+

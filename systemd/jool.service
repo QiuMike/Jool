@@ -1,11 +1,25 @@
 [Unit]
-Description=Jool NAT64 Configuration Service
+Description=Stateful NAT64
 After=network.target
 
 [Service]
+# Note: Given that Jool is a kernel module and not an actual daemon,
+# these two directives are important for systemd to know what's going on.
+# Do not remove them.
 Type=oneshot
-ExecStartPre=/sbin/modprobe jool
-ExecStart=/usr/local/bin/jool --file /etc/jool.conf
+RemainAfterExit=yes
+
+# Note: We want to add an instance even if one already exists in some other
+# namespace. Hence, the modprobe and the instance-adding need to be separate
+# directives.
+# (Modprobing when the module has already been modprobed is a no-op, regardless
+# of whether no_instance has been issued.)
+ExecStartPre=/sbin/modprobe jool no_instance
+ExecStart=/usr/local/bin/jool-start.sh jool /etc/jool/jool.conf
+
+ExecStop=/usr/local/bin/jool-stop.sh jool
+# I'm not r-modprobing because some other instance could be running,
+# and we don't want to break it.
 
 [Install]
 WantedBy=multi-user.target
