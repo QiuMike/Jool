@@ -10,10 +10,19 @@
 #include "nat64/mod/common/icmp_wrapper.h"
 #include "nat64/mod/common/stats.h"
 
+/*
+ * Note: Offsets need to be relative to skb->data because that's how
+ * skb_header_pointer() works.
+ */
 struct pkt_metadata {
+	/*
+	 * Note: The fact that a packet has a fragment header does not imply
+	 * that it is fragmented.
+	 */
 	bool has_frag_hdr;
 	/* Offset is from skb->data. Do not use if has_frag_hdr is false. */
 	unsigned int frag_offset;
+	/* Actual packet protocol; not tuple protocol. */
 	enum l4_protocol l4_proto;
 	/* Offset is from skb->data. */
 	unsigned int l4_offset;
@@ -89,10 +98,49 @@ static int fail_if_shared(struct sk_buff *skb)
 	return 0;
 }
 
+/*
+ * Jool doesn't like making assumptions, but it certainly needs to make a few.
+ * One of them is that the skb_network_offset() offset is meant to be relative
+ * to skb->data. Thing is, this should be part of the contract of the function,
+ * but I don't see it set in stone anywhere. (Not even in the "How skbs work"
+ * guide.)
+ *
+ * Now, it's pretty obvious that this is the case for all such skbuff.h
+ * non-paged offsets at present, but I'm keeping my buttcheeks tight in case
+ * they are meant to be relative to a common pivot rather than a specific one.
+ */
+static int fail_if_broken_offset(struct sk_buff *skb)
+{
+	if (WARN(skb_network_offset(skb) != (skb_network_header(skb) - skb->data),
+			"The packet's network header offset is not relative to skb->data.\n"
+			"Translating this packet would break Jool, so dropping."))
+		return -EINVAL;
+
+	return 0;
+}
+
+static int paranoid_validations(struct sk_buff *skb, size_t basic_hdr_size)
+{
+	int error;
+
+	error = fail_if_shared(skb);
+	if (error)
+		return error;
+	error = fail_if_broken_offset(skb);
+	if (error)
+		return error;
+	if (!pskb_may_pull(skb, basic_hdr_size)) {
+		log_debug("Could not 'pull' a basic IP header out of the skb.");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 /**
  * Walks through @skb's headers, collecting data and adding it to @meta.
  *
- * @hdr6_offset number of bytes between skb_network_header(skb) and the IPv6 header.
+ * @hdr6_offset number of bytes between skb->data and the IPv6 header.
  *
  * BTW: You might want to read summarize_skb4() first, since it's a lot simpler.
  */
@@ -107,13 +155,17 @@ static int summarize_skb6(struct sk_buff *skb, unsigned int hdr6_offset, struct 
 		struct ipv6_opt_hdr *opt;
 		struct frag_hdr *frag;
 		struct tcphdr *tcp;
+		u8 *nexthdr;
 	} ptr;
 
 	u8 nexthdr;
 	unsigned int offset;
 	bool is_first = true;
 
-	nexthdr = ((struct ipv6hdr *) (skb_network_header(skb) + hdr6_offset))->nexthdr;
+	ptr.nexthdr = skb_hdr_ptr(skb, hdr6_offset + offsetof(struct ipv6hdr, nexthdr), nexthdr);
+	if (!ptr.nexthdr)
+		return truncated6(skb, "IPv6 header");
+	nexthdr = *ptr.nexthdr;
 	offset = hdr6_offset + sizeof(struct ipv6hdr);
 
 	meta->has_frag_hdr = false;
@@ -166,7 +218,7 @@ static int summarize_skb6(struct sk_buff *skb, unsigned int hdr6_offset, struct 
 			if (!ptr.opt)
 				return truncated6(skb, "extension header");
 
-			offset += 8 + 8 * ptr.opt->hdrlen;
+			offset += ipv6_optlen(ptr.opt);
 			nexthdr = ptr.opt->nexthdr;
 			break;
 
@@ -181,7 +233,8 @@ static int summarize_skb6(struct sk_buff *skb, unsigned int hdr6_offset, struct 
 	return 0; /* whatever. */
 }
 
-static int validate_inner6(struct sk_buff *skb, struct pkt_metadata *outer_meta)
+static int validate_inner6(struct sk_buff *skb,
+		struct pkt_metadata const *outer_meta)
 {
 	union {
 		struct ipv6hdr ip6;
@@ -231,7 +284,7 @@ static int validate_inner6(struct sk_buff *skb, struct pkt_metadata *outer_meta)
 	return 0;
 }
 
-static int handle_icmp6(struct sk_buff *skb, struct pkt_metadata *meta)
+static int handle_icmp6(struct sk_buff *skb, struct pkt_metadata const *meta)
 {
 	union {
 		struct icmp6hdr icmp;
@@ -266,27 +319,30 @@ static int handle_icmp6(struct sk_buff *skb, struct pkt_metadata *meta)
 	return 0;
 }
 
-/**
- * As a contract, pkt_destroy() doesn't need to be called if this fails.
- * (Just like other init functions.)
- */
 int pkt_init_ipv6(struct packet *pkt, struct sk_buff *skb)
 {
 	struct pkt_metadata meta;
 	int error;
 
 	/*
-	 * Careful in this function and subfunctions. pskb_may_pull() might
-	 * change pointers, so you generally don't want to store them.
+	 * DO NOT, UNDER ANY CIRCUMSTANCES, EXTRACT ANY BYTES FROM THE SKB'S
+	 * DATA AREA DIRECTLY (ie. without using skb_hdr_ptr()) UNTIL YOU KNOW
+	 * IT HAS ALREADY BEEN pskb_may_pull()ED. ASSUME THAT EVEN THE MAIN
+	 * LAYER 3 HEADER CAN BE PAGED.
+	 *
+	 * Also, careful in this function and subfunctions. pskb_may_pull()
+	 * might change pointers, so you generally don't want to store them.
 	 */
 
-#ifdef BENCHMARK
-	getnstimeofday(&pkt->start_time);
-#endif
+	log_debug("===============================================");
 
-	error = fail_if_shared(skb);
+	error = paranoid_validations(skb, sizeof(struct ipv6hdr));
 	if (error)
 		return error;
+
+	log_debug("Catching IPv6 packet: %pI6c->%pI6c",
+			&ipv6_hdr(skb)->saddr,
+			&ipv6_hdr(skb)->daddr);
 
 	if (skb->len != get_tot_len_ipv6(skb))
 		return inhdr6(skb, "Packet size doesn't match the IPv6 header's payload length field.");
@@ -433,27 +489,30 @@ static int summarize_skb4(struct sk_buff *skb, struct pkt_metadata *meta)
 	return 0;
 }
 
-/**
- * As a contract, pkt_destroy() doesn't need to be called if this fails.
- * (Just like other init functions.)
- */
 int pkt_init_ipv4(struct packet *pkt, struct sk_buff *skb)
 {
 	struct pkt_metadata meta;
 	int error;
 
 	/*
-	 * Careful in this function and subfunctions. pskb_may_pull() might
-	 * change pointers, so you generally don't want to store them.
+	 * DO NOT, UNDER ANY CIRCUMSTANCES, EXTRACT ANY BYTES FROM THE SKB'S
+	 * DATA AREA DIRECTLY (ie. without using skb_hdr_ptr()) UNTIL YOU KNOW
+	 * IT HAS ALREADY BEEN pskb_may_pull()ED. ASSUME THAT EVEN THE MAIN
+	 * LAYER 3 HEADER CAN BE PAGED.
+	 *
+	 * Also, careful in this function and subfunctions. pskb_may_pull()
+	 * might change pointers, so you generally don't want to store them.
 	 */
 
-#ifdef BENCHMARK
-	getnstimeofday(&pkt->start_time);
-#endif
+	log_debug("===============================================");
 
-	error = fail_if_shared(skb);
+	error = paranoid_validations(skb, sizeof(struct iphdr));
 	if (error)
 		return error;
+
+	log_debug("Catching IPv4 packet: %pI4->%pI4",
+			&ip_hdr(skb)->saddr,
+			&ip_hdr(skb)->daddr);
 
 	error = summarize_skb4(skb, &meta);
 	if (error)
@@ -475,6 +534,41 @@ int pkt_init_ipv4(struct packet *pkt, struct sk_buff *skb)
 	pkt->original_pkt = pkt;
 
 	return 0;
+}
+
+/**
+ * skb_pull() is oddly special in that it can return NULL in a situation where
+ * most skb functions would just panic. Which is actually great for skb_pull();
+ * the kernel good practices thingy rightfully states that we should always
+ * respond to such situations gracefully instead of BUG()ging out like a bunch
+ * of wusses.
+ *
+ * These situations should not arise, however, so we should treat them as
+ * programming errors. (WARN, cancel the packet's translation and then continue
+ * normally.)
+ *
+ * This function takes care of the WARN clutter. "j" stands for "Jool", as
+ * usual.
+ *
+ * Never use skb_pull() directly.
+ */
+unsigned char *jskb_pull(struct sk_buff *skb, unsigned int len)
+{
+	unsigned char *result = skb_pull(skb, len);
+	WARN(!result, "Bug: We tried to pull %u bytes out of a %u-length skb.",
+			len, skb->len);
+	return result;
+}
+
+/**
+ * skb_push() cannot return NULL at present, but maybe someday will.
+ */
+unsigned char *jskb_push(struct sk_buff *skb, unsigned int len)
+{
+	unsigned char *result = skb_push(skb, len);
+	WARN(!result, "Bug: skb_push() returned NULL (skblen:%u len:%u).",
+			skb->len, len);
+	return result;
 }
 
 #define SIMPLE_MIN(a, b) ((a < b) ? a : b)

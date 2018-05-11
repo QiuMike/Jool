@@ -12,12 +12,12 @@
 include $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))/../common.mk
 
 
-LOGTIME = logtime
+TYPES = types
 
-obj-m += $(LOGTIME).o
+obj-m += $(TYPES).o
 
-$(LOGTIME)-objs += $(MIN_REQS)
-$(LOGTIME)-objs += log_time_test.o
+$(TYPES)-objs += $(MIN_REQS)
+$(TYPES)-objs += types_test.o
 
 
 all:
@@ -29,5 +29,5 @@ clean:
 	rm -f  *.ko  *.o
 test:
 	sudo dmesg -C
-	-sudo insmod $(LOGTIME).ko && sudo rmmod $(LOGTIME)
+	-sudo insmod $(TYPES).ko && sudo rmmod $(TYPES)
 	sudo dmesg -tc | less

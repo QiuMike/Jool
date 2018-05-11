@@ -27,44 +27,44 @@ static verdict handle_unknown_l4(struct xlation *state)
 static struct translation_steps steps[][L4_PROTO_COUNT] = {
 	{ /* IPv6 */
 		{
-			.skb_create_fn = ttp64_create_skb,
+			.skb_alloc_fn = ttp64_alloc_skb,
 			.l3_hdr_fn = ttp64_ipv4,
 			.l3_payload_fn = ttp64_tcp,
 		},
 		{
-			.skb_create_fn = ttp64_create_skb,
+			.skb_alloc_fn = ttp64_alloc_skb,
 			.l3_hdr_fn = ttp64_ipv4,
 			.l3_payload_fn = ttp64_udp,
 		},
 		{
-			.skb_create_fn = ttp64_create_skb,
+			.skb_alloc_fn = ttp64_alloc_skb,
 			.l3_hdr_fn = ttp64_ipv4,
 			.l3_payload_fn = ttp64_icmp,
 		},
 		{
-			.skb_create_fn = ttp64_create_skb,
+			.skb_alloc_fn = ttp64_alloc_skb,
 			.l3_hdr_fn = ttp64_ipv4,
 			.l3_payload_fn = handle_unknown_l4,
 		}
 	},
 	{ /* IPv4 */
 		{
-			.skb_create_fn = ttp46_create_skb,
+			.skb_alloc_fn = ttp46_alloc_skb,
 			.l3_hdr_fn = ttp46_ipv6,
 			.l3_payload_fn = ttp46_tcp,
 		},
 		{
-			.skb_create_fn = ttp46_create_skb,
+			.skb_alloc_fn = ttp46_alloc_skb,
 			.l3_hdr_fn = ttp46_ipv6,
 			.l3_payload_fn = ttp46_udp,
 		},
 		{
-			.skb_create_fn = ttp46_create_skb,
+			.skb_alloc_fn = ttp46_alloc_skb,
 			.l3_hdr_fn = ttp46_ipv6,
 			.l3_payload_fn = ttp46_icmp,
 		},
 		{
-			.skb_create_fn = ttp46_create_skb,
+			.skb_alloc_fn = ttp46_alloc_skb,
 			.l3_hdr_fn = ttp46_ipv6,
 			.l3_payload_fn = handle_unknown_l4,
 		}
@@ -100,6 +100,7 @@ static int report_bug247(struct packet *pkt, __u8 proto)
 	struct sk_buff *skb = pkt->skb;
 	struct skb_shared_info *shinfo = skb_shinfo(skb);
 	unsigned int i;
+	unsigned char *pos;
 
 	pr_err("----- JOOL OUTPUT -----\n");
 	pr_err("Bug #247 happened!\n");
@@ -120,6 +121,20 @@ static int report_bug247(struct packet *pkt, __u8 proto)
 				skb_frag_size(&shinfo->frags[i]));
 	}
 
+	pr_err("skb head:%p data:%p tail:%p end:%p\n",
+			skb->head, skb->data,
+			skb_tail_pointer(skb),
+			skb_end_pointer(skb));
+	pr_err("skb l3-hdr:%p l4-hdr:%p payload:%p\n",
+			skb_network_header(skb),
+			skb_transport_header(skb),
+			pkt_payload(pkt));
+
+	pr_err("packet content: ");
+	for (pos = skb->head; pos < skb_end_pointer(skb); pos++)
+		pr_cont("%x ", *pos);
+	pr_cont("\n");
+
 	pr_err("Dropping packet.\n");
 	pr_err("-----------------------\n");
 	return -EINVAL;
@@ -130,10 +145,11 @@ static int move_pointers_in(struct packet *pkt, __u8 protocol,
 {
 	unsigned int l4hdr_len;
 
-	if (unlikely(pkt->skb->len < pkt->skb->data_len))
+	if (unlikely(pkt->skb->len - pkt_hdrs_len(pkt) < pkt->skb->data_len))
 		return report_bug247(pkt, protocol);
 
-	skb_pull(pkt->skb, pkt_hdrs_len(pkt));
+	if (!jskb_pull(pkt->skb, pkt_hdrs_len(pkt)))
+		return -EINVAL;
 	skb_reset_network_header(pkt->skb);
 	skb_set_transport_header(pkt->skb, l3hdr_len);
 
@@ -165,7 +181,8 @@ static int move_pointers_in(struct packet *pkt, __u8 protocol,
 static int move_pointers_out(struct packet *in, struct packet *out,
 		unsigned int l3hdr_len)
 {
-	skb_pull(out->skb, pkt_hdrs_len(out));
+	if (!jskb_pull(out->skb, pkt_hdrs_len(out)))
+		return -EINVAL;
 	skb_reset_network_header(out->skb);
 	skb_set_transport_header(out->skb, l3hdr_len);
 
@@ -220,9 +237,10 @@ static void backup(struct packet *pkt, struct backup_skb *bkp)
 		bkp->tuple = pkt->tuple;
 }
 
-static void restore(struct packet *pkt, struct backup_skb *bkp)
+static int restore(struct packet *pkt, struct backup_skb *bkp)
 {
-	skb_push(pkt->skb, bkp->pulled);
+	if (!jskb_push(pkt->skb, bkp->pulled))
+		return -EINVAL;
 	skb_set_network_header(pkt->skb, bkp->offset.l3);
 	skb_set_transport_header(pkt->skb, bkp->offset.l4);
 	pkt->payload = bkp->payload;
@@ -230,6 +248,7 @@ static void restore(struct packet *pkt, struct backup_skb *bkp)
 	pkt->is_inner = 0;
 	if (xlat_is_nat64())
 		pkt->tuple = bkp->tuple;
+	return 0;
 }
 
 verdict ttpcomm_translate_inner_packet(struct xlation *state)
@@ -283,8 +302,10 @@ verdict ttpcomm_translate_inner_packet(struct xlation *state)
 	if (result != VERDICT_CONTINUE)
 		return result;
 
-	restore(in, &bkp_in);
-	restore(out, &bkp_out);
+	if (restore(in, &bkp_in))
+		return VERDICT_DROP;
+	if (restore(out, &bkp_out))
+		return VERDICT_DROP;
 
 	return VERDICT_CONTINUE;
 }
