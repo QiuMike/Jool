@@ -1,13 +1,35 @@
+# Reminder: DKMS replaces "DEBIAN_PACKAGE" with "jool".
 Source: DEBIAN_PACKAGE-dkms
+Maintainer: Jool Team <jool@nic.mx>
+Uploaders: Oswaldo Perez <oswaldo.perez.dominguez@gmail.com>,
+	Alberto Leiva Popper <ydahhrk@gmail.com>
 Section: net
 Priority: optional
-Maintainer: Oswaldo Perez <oswaldo.perez.dominguez@gmail.com>
-Build-Depends: debhelper (>= 7), dkms, pkg-config, automake, linux-headers-amd64, build-essential, libnl-genl-3-dev (>= 3.1)
-Standards-Version: 1.2.38
-Homepage: jool.mx
+# TODO minimize this list; build-essential and friends can and should probably
+# be omitted.
+# TODO also "linux-headers-amd64" doesn't look portable. It is also strange
+# because there's no such package in apt-cache search and my VM can't install it
+# (maybe it's Debian-specific and not Ubuntu?).
+# If it really is the way to go, you should probably list the corresponding
+# headers for each arch.
+Build-Depends: debhelper (>= 10),
+	dkms,
+	pkg-config,
+	automake,
+	linux-headers-amd64,
+	build-essential,
+	libnl-genl-3-dev (>= 3.1)
+Standards-Version: 4.1.4.1
+Homepage: https://jool.mx
+Vcs-Browser: https://github.com/NICMx/Jool
+Vcs-Git: https://github.com/NICMx/Jool.git
 
 Package: DEBIAN_PACKAGE-dkms
+# TODO this should be "any", but if I change it it stops working
+# for some reason.
 Architecture: all
-Depends: dkms (>= 1.95), pkg-config, linux-headers-amd64, automake, build-essential, libnl-genl-3-dev(>= 3.1), ${misc:Depends}
-Description: This package uses DKMS to automatically build the jool kernel modules.
- Jool is an Open Source implementation of IPv4/IPv6 Translation on Linux. Until version 3.2.x, it used to be only a Stateful NAT64; starting from 3.3.0, it also supports SIIT mode. Jool supports Linux kernels 3.2.0 and above. Jool is a Netfilter module that hooks itself to the prerouting chain. Because Netfilter isn’t comfortable with packets changing layer-3 protocols, Jool has its own forwarding pipeline, which only translating packets traverse. You can hook one instance of SIIT Jool and one instance of NAT64 Jool per network namespace.
+Depends: ${misc:Depends}
+Description: SIIT and NAT64 for Linux
+ Jool is an Open Source implementation of IPv4/IPv6 Translation on
+ Linux. It implements SIIT ("Stateless NAT64") and Stateful NAT64.
+

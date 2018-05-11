@@ -1,6 +1,6 @@
-DEBIAN_PACKAGE-dkms (MODULE_VERSION) unstable; urgency=low
+DEBIAN_PACKAGE-dkms (MODULE_VERSION) UNRELEASED; urgency=low
 
-  * Automatically packaged by DKMS.
+  * Initial release (Closes: #883393)
 
- -- Dynamic Kernel Modules Support Team <pkg-dkms-maint@lists.alioth.debian.org>  DATE_STAMP
+ -- Alberto Leiva Popper <ydahhrk@gmail.com>  DATE_STAMP
 
