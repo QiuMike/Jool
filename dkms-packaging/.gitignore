@@ -1,0 +1,11 @@
+debian/debhelper-build-stamp
+debian/files
+debian/jool-dkms.dkms.debhelper
+debian/jool-dkms.postinst.debhelper
+debian/jool-dkms.prerm.debhelper
+debian/jool-dkms.substvars
+debian/jool-dkms/
+debian/jool-utils.substvars
+debian/jool-utils/
+debian/tmp/
+
