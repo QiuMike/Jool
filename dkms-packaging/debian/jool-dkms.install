@@ -3,6 +3,19 @@
 VERSION=$(dpkg-parsechangelog | sed -n 's/^Version: *\([^-]\+\)-.\+/\1/p')
 
 echo mod usr/src/jool-${VERSION}
-echo common usr/src/jool-${VERSION}
+
+# Some make clean appears to have issues. Either that or debhelper doesn't like
+# it when different project binaries share object files.
+# The problem is that I'd like to write here "echo common
+# usr/src/jool-${VERSION}", but if I do that, .o files are copied into the
+# binary package, and lintian complains.
+# Until I spot the exact cause of the problem, .c files will need to be copied
+# manually.
+# But it's probably better to not fix it for now; Jool 4 will have a different
+# directory structure and this problem will naturally disappear then.
+echo common/netlink/*.c usr/src/jool-${VERSION}/common/netlink
+echo common/stateful/*.c usr/src/jool-${VERSION}/common/stateful
+echo common/stateless/*.c usr/src/jool-${VERSION}/common/stateless
+
 echo include usr/src/jool-${VERSION}
 

@@ -5,7 +5,7 @@ Uploaders: Oswaldo Perez <oswaldo.perez.dominguez@gmail.com>,
 Section: net
 Priority: optional
 # TODO shrink this list further?
-Build-Depends: debhelper (>= 9),
+Build-Depends: debhelper (>= 10),
 	dkms,
 	pkg-config,
 	libnl-genl-3-dev (>= 3.1)
@@ -42,7 +42,6 @@ Architecture: any
 # TODO clean up
 Depends: ${shlibs:Depends},
 	${misc:Depends},
-	${perl:Depends},
 	libnl-genl-3-200
 Recommends: jool-dkms
 Description: Userspace configuration clients for the Jool kernel modules
