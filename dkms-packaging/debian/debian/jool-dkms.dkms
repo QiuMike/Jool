@@ -1,0 +1,15 @@
+PACKAGE_NAME="jool"
+PACKAGE_VERSION="#MODULE_VERSION#"
+AUTOINSTALL="yes"
+
+MAKE[0]="make -C ${kernel_source_dir} SUBDIRS=${dkms_tree}/${PACKAGE_NAME}/${PACKAGE_VERSION}/build/mod/stateful modules && make -C ${kernel_source_dir} SUBDIRS=${dkms_tree}/${PACKAGE_NAME}/${PACKAGE_VERSION}/build/mod/stateless modules"
+
+CLEAN="make -C ${dkms_tree}/${PACKAGE_NAME}/${PACKAGE_VERSION}/build/mod clean"
+
+BUILT_MODULE_NAME[0]="jool"
+BUILT_MODULE_LOCATION[0]="mod/stateful/"
+DEST_MODULE_LOCATION[0]="/extra/"
+
+BUILT_MODULE_NAME[1]="jool_siit"
+BUILT_MODULE_LOCATION[1]="mod/stateless/"
+DEST_MODULE_LOCATION[1]="/extra/"

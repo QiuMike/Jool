@@ -1,6 +1,6 @@
-DEBIAN_PACKAGE-dkms (MODULE_VERSION) UNRELEASED; urgency=low
+jool (3.5.7-1) UNRELEASED; urgency=low
 
   * Initial release (Closes: #883393)
 
- -- Alberto Leiva Popper <ydahhrk@gmail.com>  DATE_STAMP
+ -- Alberto Leiva Popper <ydahhrk@gmail.com>  Tue, 15 May 2018 10:46:14 -0500
 

@@ -1,0 +1,8 @@
+#!/bin/sh
+
+VERSION=$(dpkg-parsechangelog | sed -n 's/^Version: *\([^-]\+\)-.\+/\1/p')
+
+echo mod usr/src/jool-${VERSION}
+echo common usr/src/jool-${VERSION}
+echo include usr/src/jool-${VERSION}
+

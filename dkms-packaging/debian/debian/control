@@ -1,35 +1,53 @@
-# Reminder: DKMS replaces "DEBIAN_PACKAGE" with "jool".
-Source: DEBIAN_PACKAGE-dkms
+Source: jool
 Maintainer: Jool Team <jool@nic.mx>
 Uploaders: Oswaldo Perez <oswaldo.perez.dominguez@gmail.com>,
 	Alberto Leiva Popper <ydahhrk@gmail.com>
 Section: net
 Priority: optional
-# TODO minimize this list; build-essential and friends can and should probably
-# be omitted.
-# TODO also "linux-headers-amd64" doesn't look portable. It is also strange
-# because there's no such package in apt-cache search and my VM can't install it
-# (maybe it's Debian-specific and not Ubuntu?).
-# If it really is the way to go, you should probably list the corresponding
-# headers for each arch.
-Build-Depends: debhelper (>= 10),
+# TODO shrink this list further?
+Build-Depends: debhelper (>= 9),
 	dkms,
 	pkg-config,
-	automake,
-	linux-headers-amd64,
-	build-essential,
 	libnl-genl-3-dev (>= 3.1)
 Standards-Version: 4.1.4.1
 Homepage: https://jool.mx
 Vcs-Browser: https://github.com/NICMx/Jool
 Vcs-Git: https://github.com/NICMx/Jool.git
 
-Package: DEBIAN_PACKAGE-dkms
-# TODO this should be "any", but if I change it it stops working
-# for some reason.
+Package: jool-dkms
 Architecture: all
 Depends: ${misc:Depends}
-Description: SIIT and NAT64 for Linux
- Jool is an Open Source implementation of IPv4/IPv6 Translation on
- Linux. It implements SIIT ("Stateless NAT64") and Stateful NAT64.
+Description: Kernel-based SIIT and NAT64 (IP/ICMP translation)
+	Jool is a couple of Netfilter kernel modules that convert the
+	forwarding IPv4 traffic (of a given network namespace) to IPv6
+	traffic and vice versa, according to a configurable IP address
+	translation strategy.
+	.
+	The `jool_siit` module implements SIIT (sometimes known as "Stateless
+	NAT64"), a lightweight translator that avoids storing state by
+	keeping a deterministic 1-to-1 relationship between IPv4 addresses
+	and their IPv6 counterparts. It can translate addresses using the
+	"traditional prefix" algorithm defined in RFC 6052, and/or the
+	Explicit Address Mapping algorithm defined in RFC 7757.
+	.
+	The `jool` module implements Stateful NAT64, a translator that can
+	achieve 1 (IPv4)-to-N (IPv6) relationships through a mapping strategy
+	based on stateful NAT. Its full address translation algorithm is
+	defined in RFC 6146.
+	.
+	The jool-utils package contains the userspace configuration clients.
+
+Package: jool-utils
+Architecture: any
+# TODO clean up
+Depends: ${shlibs:Depends},
+	${misc:Depends},
+	${perl:Depends},
+	libnl-genl-3-200
+Recommends: jool-dkms
+Description: Userspace configuration clients for the Jool kernel modules
+	This package contains the userspace configuration clients that can
+	be used to tweak the behavior of Jool's kernel modules.
+	.
+	The kernel modules can be found in the jool-dkms package.
 

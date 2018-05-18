@@ -1,54 +1,26 @@
 #!/usr/bin/make -f
-# -*- makefile -*-
 
-# Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+# See debhelper(7)
+# output every command that modifies files on the build system.
+#export DH_VERBOSE = 1
 
-DEB_NAME=DEBIAN_PACKAGE
-NAME=MODULE_NAME
-VERSION=MODULE_VERSION
+# see FEATURE AREAS in dpkg-buildflags(1)
+#export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
-configure: configure-stamp
-configure-stamp:
-	dh_testdir
-	touch configure-stamp
+# see ENVIRONMENT in dpkg-buildflags(1)
+# package maintainers to append CFLAGS
+#export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
+# package maintainers to append LDFLAGS
+#export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
+%:
+	# "You're going to need the DKMS addon.
+	# But you're only going to compile the usr directory."
+	# (The kernel module will not be compiled for the package.
+	# Its source code will be included and DKMS will compile it
+	# much later.)
+	dh $@  --with=dkms --sourcedirectory=usr
 
-build: build-stamp
+override_dh_dkms:
+	dh_dkms -V
 
-build-stamp: configure-stamp 
-	dh_testdir
-	$(MAKE)
-	touch $@
-
-clean:
-	dh_testdir
-	dh_testroot
-	rm -f build-stamp configure-stamp
-	-$(MAKE) clean
-	dh_clean
-
-install: build
-	dh_testdir
-	dh_testroot
-	dh_prep
-	dh_installdirs
-	$(MAKE) DESTDIR=$(CURDIR)/debian/$(DEB_NAME)-dkms NAME=$(NAME) VERSION=$(VERSION) install
-
-binary-arch: build install
-
-binary-indep: build install
-	dh_testdir
-	dh_testroot
-	dh_link
-	dh_strip
-	dh_compress
-	dh_fixperms
-	dh_installdeb
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install configure
