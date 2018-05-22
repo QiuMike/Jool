@@ -15,6 +15,7 @@
 #include "nat64/common/constants.h"
 #include "nat64/common/types.h"
 #include "nat64/common/xlat.h"
+#include "nat64/usr/argp_options.h"
 #include "nat64/usr/str_utils.h"
 #include "nat64/usr/instance.h"
 #include "nat64/usr/file.h"
@@ -28,7 +29,6 @@
 #include "nat64/usr/session.h"
 #include "nat64/usr/eam.h"
 #include "nat64/usr/global.h"
-#include "nat64/usr/argp/options.h"
 
 
 

@@ -3,16 +3,17 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "nat64/common/config.h"
 #include "nat64/common/constants.h"
 #include "nat64/common/types.h"
+#include "nat64/usr/argp_options.h"
 #include "nat64/usr/cJSON.h"
 #include "nat64/usr/file.h"
 #include "nat64/usr/global.h"
 #include "nat64/usr/netlink.h"
-#include "nat64/usr/nl/buffer.h"
+#include "nat64/usr/nl_buffer.h"
 #include "nat64/usr/str_utils.h"
-#include "nat64/usr/argp/options.h"
 
 static int do_parsing(char *buffer);
 static int parse_siit_json(cJSON *json);

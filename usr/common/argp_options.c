@@ -1,4 +1,5 @@
-#include "nat64/usr/argp/options.h"
+#include "nat64/usr/argp_options.h"
+
 #include <argp.h>
 #include <stdlib.h>
 #include <string.h>

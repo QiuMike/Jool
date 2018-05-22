@@ -1,4 +1,4 @@
-#include "nat64/usr/nl/buffer.h"
+#include "nat64/usr/nl_buffer.h"
 
 #include <errno.h>
 #include <stdlib.h>
