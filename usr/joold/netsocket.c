@@ -281,7 +281,7 @@ static int mcast4opt_set_out_interface(struct netsocket_config *cfg)
 		return 1;
 	}
 
-	log_info("-> The outgoing interface was overriden.");
+	log_info("-> The outgoing interface was overridden.");
 	return 0;
 }
 
@@ -378,7 +378,7 @@ static int mcast6opt_set_out_interface(struct netsocket_config *cfg)
 		return 1;
 	}
 
-	log_info("The outgoing interface was overriden.");
+	log_info("The outgoing interface was overridden.");
 	return 0;
 }
 
