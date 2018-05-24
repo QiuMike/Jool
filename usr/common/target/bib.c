@@ -119,7 +119,7 @@ int bib_display(display_flags flags)
 static int bib_count_response(struct jool_response *response, void *arg)
 {
 	if (response->payload_len != sizeof(__u64)) {
-		log_err("Jool's response is not the expected integer.");
+		log_errf("Jool's response is not the expected integer.");
 		return -EINVAL;
 	}
 
@@ -187,7 +187,7 @@ static int exec_request(display_flags flags,
 
 static int bib_add_response(struct jool_response *response, void *arg)
 {
-	log_info("The BIB entry was added successfully.");
+	log_infof("The BIB entry was added successfully.");
 	return 0;
 }
 
@@ -209,7 +209,7 @@ int bib_add(display_flags flags,
 
 static int bib_remove_response(struct jool_response *response, void *arg)
 {
-	log_info("The BIB entry was removed successfully.");
+	log_infof("The BIB entry was removed successfully.");
 	return 0;
 }
 

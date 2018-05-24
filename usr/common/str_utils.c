@@ -119,14 +119,14 @@ int validate_int(const char *str)
 	int error;
 
 	if (!str) {
-		log_err("Programming error: 'str' is NULL.");
+		log_errf("Programming error: 'str' is NULL.");
 		return -EINVAL;
 	}
 
 	/* It seems this RE implementation doesn't understand '+'. */
 	if (regcomp(&integer_regex, "^[0-9][0-9]*", 0)) {
-		log_err("Warning: Integer regex didn't compile.");
-		log_err("(I will be unable to validate integer inputs.)");
+		log_errf("Warning: Integer regex didn't compile.");
+		log_errf("(I will be unable to validate integer inputs.)");
 		regfree(&integer_regex);
 		/*
 		 * Don't punish the user over our incompetence.
@@ -297,7 +297,7 @@ int str_to_u16_array(const char *str, __u16 **array_out, size_t *array_len_out)
 	/* Build the result. */
 	array = malloc(array_len * sizeof(*array));
 	if (!array) {
-		log_err("Memory allocation failed. Cannot parse the input...");
+		log_errf("Memory allocation failed. Cannot parse the input...");
 		return -ENOMEM;
 	}
 

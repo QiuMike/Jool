@@ -101,7 +101,7 @@ static int update_state(struct arguments *args, enum config_mode valid_modes,
 	return 0;
 
 fail:
-	log_err("Illegal arguments combination. See the manpage for grammar.");
+	log_errf("Illegal arguments combination. See the manpage for grammar.");
 	return -EINVAL;
 }
 
@@ -113,7 +113,7 @@ static int set_global_arg(struct arguments *args, __u16 type, size_t size,
 		return error;
 
 	if (args->global.data) {
-		log_err("You can only edit one global config value at a time.");
+		log_errf("You can only edit one global config value at a time.");
 		return -EINVAL;
 	}
 
@@ -257,7 +257,7 @@ static int set_ipv4_prefix(struct arguments *args, char *str)
 		return error;
 
 	if (args->db.prefix4_set) {
-		log_err("Only one IPv4 prefix can be added/removed at a time.");
+		log_errf("Only one IPv4 prefix can be added/removed at a time.");
 		return -EINVAL;
 	}
 
@@ -275,7 +275,7 @@ static int set_ipv6_prefix(struct arguments *args, char *str)
 		return error;
 
 	if (args->db.prefix6_set) {
-		log_err("Only one IPv6 prefix can be added/removed at a time.");
+		log_errf("Only one IPv6 prefix can be added/removed at a time.");
 		return -EINVAL;
 	}
 
@@ -288,7 +288,7 @@ static int set_bib6(struct arguments *args, char *str)
 	int error;
 
 	if (xlat_is_siit()) {
-		log_err("You entered an IPv6 transport address. SIIT doesn't have BIBs...");
+		log_errf("You entered an IPv6 transport address. SIIT doesn't have BIBs...");
 		return -EINVAL;
 	}
 
@@ -297,8 +297,8 @@ static int set_bib6(struct arguments *args, char *str)
 		return error;
 
 	if (args->db.bib.addr6_set) {
-		log_err("You entered more than one IPv6 transport address.");
-		log_err("Only one BIB entry can be added/removed at a time.");
+		log_errf("You entered more than one IPv6 transport address.");
+		log_errf("Only one BIB entry can be added/removed at a time.");
 		return -EINVAL;
 	}
 
@@ -311,7 +311,7 @@ static int set_bib4(struct arguments *args, char *str)
 	int error;
 
 	if (xlat_is_siit()) {
-		log_err("You entered an IPv4 transport address. SIIT doesn't have BIBs...");
+		log_errf("You entered an IPv4 transport address. SIIT doesn't have BIBs...");
 		return -EINVAL;
 	}
 
@@ -320,8 +320,8 @@ static int set_bib4(struct arguments *args, char *str)
 		return error;
 
 	if (args->db.bib.addr4_set) {
-		log_err("You entered more than one IPv4 transport address.");
-		log_err("Only one BIB entry can be added/removed at a time.");
+		log_errf("You entered more than one IPv4 transport address.");
+		log_errf("Only one BIB entry can be added/removed at a time.");
 		return -EINVAL;
 	}
 
@@ -334,7 +334,7 @@ static int set_port_range(struct arguments *args, char *str)
 	int error;
 
 	if (xlat_is_siit()) {
-		log_err("You seem to have entered a port range. SIIT doesn't need them...");
+		log_errf("You seem to have entered a port range. SIIT doesn't need them...");
 		return -EINVAL;
 	}
 
@@ -575,7 +575,7 @@ static int parse_opt(int key, char *str, struct argp_state *state)
 		args->json_filename = malloc(sizeof(char) * (strlen(str) + 1));
 		if (!args->json_filename) {
 			error = -ENOMEM;
-			log_err("Unable to allocate memory!.");
+			log_errf("Unable to allocate memory!.");
 			break;
 		}
 
@@ -669,14 +669,14 @@ static int handle_pool6(struct arguments *args)
 	case OP_ADD:
 	case OP_UPDATE:
 		if (!args->db.prefix6_set) {
-			log_err("The IPv6 prefix is mandatory.");
+			log_errf("The IPv6 prefix is mandatory.");
 			return -EINVAL;
 		}
 		return pool6_add(&args->db.prefix6, args->db.force);
 
 	case OP_REMOVE:
 		if (!args->db.prefix6_set) {
-			log_err("The IPv6 prefix is mandatory.");
+			log_errf("The IPv6 prefix is mandatory.");
 			return -EINVAL;
 		}
 		return pool6_remove(&args->db.prefix6);
@@ -698,7 +698,7 @@ static int __pool4_add(struct arguments *args)
 	int icmp_error = 0;
 
 	if (!args->db.prefix4_set) {
-		log_err("The address/prefix argument is mandatory.");
+		log_errf("The address/prefix argument is mandatory.");
 		return -EINVAL;
 	}
 
@@ -759,7 +759,7 @@ static int __pool4_rm(struct arguments *args)
 	int icmp_error = 0;
 
 	if (!args->db.prefix4_set) {
-		log_err("The address/prefix argument is mandatory.");
+		log_errf("The address/prefix argument is mandatory.");
 		return -EINVAL;
 	}
 
@@ -788,7 +788,7 @@ static int __pool4_rm(struct arguments *args)
 static int handle_pool4(struct arguments *args)
 {
 	if (xlat_is_siit()) {
-		log_err("SIIT doesn't have pool4.");
+		log_errf("SIIT doesn't have pool4.");
 		return -EINVAL;
 	}
 
@@ -816,7 +816,7 @@ static int handle_bib(struct arguments *args)
 	struct ipv4_transport_addr *addr4;
 
 	if (xlat_is_siit()) {
-		log_err("SIIT doesn't have BIBs.");
+		log_errf("SIIT doesn't have BIBs.");
 		return -EINVAL;
 	}
 
@@ -831,14 +831,14 @@ static int handle_bib(struct arguments *args)
 
 	case OP_ADD:
 		if (!addr6 || !addr4) {
-			log_err("The transport address arguments are mandatory during adds.");
+			log_errf("The transport address arguments are mandatory during adds.");
 			return -EINVAL;
 		}
 		return bib_add(args->flags, addr6, addr4);
 
 	case OP_REMOVE:
 		if (!addr6 && !addr4) {
-			log_err("A remove requires an IPv4 and/or v6 transport address.");
+			log_errf("A remove requires an IPv4 and/or v6 transport address.");
 			return -EINVAL;
 		}
 		return bib_remove(args->flags, addr6, addr4);
@@ -851,7 +851,7 @@ static int handle_bib(struct arguments *args)
 static int handle_session(struct arguments *args)
 {
 	if (xlat_is_siit()) {
-		log_err("SIIT doesn't have sessions.");
+		log_errf("SIIT doesn't have sessions.");
 		return -EINVAL;
 	}
 
@@ -871,7 +871,7 @@ static int handle_eamt(struct arguments *args)
 	struct ipv4_prefix *prefix4;
 
 	if (xlat_is_nat64()) {
-		log_err("Stateful NAT64 doesn't have EAMTs.");
+		log_errf("Stateful NAT64 doesn't have EAMTs.");
 		return -EINVAL;
 	}
 
@@ -886,14 +886,14 @@ static int handle_eamt(struct arguments *args)
 
 	case OP_ADD:
 		if (!prefix6 || !prefix4) {
-			log_err("Both EAM prefixes are mandatory during adds.");
+			log_errf("Both EAM prefixes are mandatory during adds.");
 			return -EINVAL;
 		}
 		return eam_add(prefix6, prefix4, args->db.force);
 
 	case OP_REMOVE:
 		if (!prefix6 && !prefix4) {
-			log_err("A remove requires an IPv4 and/or v6 prefix.");
+			log_errf("A remove requires an IPv4 and/or v6 prefix.");
 			return -EINVAL;
 		}
 		return eam_remove(prefix6, prefix4);
@@ -908,7 +908,7 @@ static int handle_eamt(struct arguments *args)
 static int handle_addr4_pool(struct arguments *args)
 {
 	if (xlat_is_nat64()) {
-		log_err("blacklist/RFC6791 don't apply to Stateful NAT64.");
+		log_errf("blacklist/RFC6791 don't apply to Stateful NAT64.");
 		return -EINVAL;
 	}
 
@@ -920,14 +920,14 @@ static int handle_addr4_pool(struct arguments *args)
 
 	case OP_ADD:
 		if (!args->db.prefix4_set) {
-			log_err("The address/prefix argument is mandatory.");
+			log_errf("The address/prefix argument is mandatory.");
 			return -EINVAL;
 		}
 		return pool_add(args->mode, &args->db.prefix4, args->db.force);
 
 	case OP_REMOVE:
 		if (!args->db.prefix4_set) {
-			log_err("The address/prefix argument is mandatory.");
+			log_errf("The address/prefix argument is mandatory.");
 			return -EINVAL;
 		}
 		return pool_rm(args->mode, &args->db.prefix4);

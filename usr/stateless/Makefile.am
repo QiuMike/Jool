@@ -5,7 +5,7 @@ bin_PROGRAMS = jool_siit
 #jool_siit_SOURCES = nothing needed here anymore. See jool_siit_*_SOURCES.
 
 jool_siit_LDADD = ${LIBNLGENL3_LIBS}
-jool_siit_CFLAGS = -Wall -O2
+jool_siit_CFLAGS = -Wall -pedantic -O2
 jool_siit_CFLAGS += -I${srcdir}/../../include
 jool_siit_CFLAGS += ${LIBNLGENL3_CFLAGS} ${JOOL_FLAGS}
 man_MANS = jool_siit.8

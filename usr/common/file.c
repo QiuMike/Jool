@@ -44,7 +44,7 @@ int file_to_string(char *file_name, char **result)
 
 	buffer = malloc(length + 1);
 	if (!buffer) {
-		log_err("Out of memory.");
+		log_errf("Out of memory.");
 		error = -ENOMEM;
 		goto fail;
 	}
@@ -54,7 +54,7 @@ int file_to_string(char *file_name, char **result)
 		current_read = fread(&buffer[total_read], 1, length, file);
 		if (current_read == 0 && (error = ferror(file))) {
 			log_err("Reading the file threw error code %d.", error);
-			log_err("I don't know which is the correct way to stringify that code.");
+			log_errf("I don't know which is the correct way to stringify that code.");
 			errno = error;
 			perror("Let's try this one");
 			free(buffer);

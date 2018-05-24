@@ -35,7 +35,7 @@ void nlbuffer_destroy(struct nl_buffer *buffer)
 int nlbuffer_write(struct nl_buffer *buffer, void *payload, size_t payload_len)
 {
 	if (payload_len > BUFFER_MAX) {
-		log_err("Packet content is larger than packet limit.");
+		log_errf("Packet content is larger than packet limit.");
 		return -EINVAL;
 	}
 

@@ -141,7 +141,7 @@ static bool display_table(u_int8_t l4_proto, display_flags flags)
 		if (args.row_count > 0)
 			log_info("  (Fetched %u entries.)\n", args.row_count);
 		else
-			log_info("  (empty)\n");
+			log_infof("  (empty)\n");
 	}
 
 	return error;
@@ -175,7 +175,7 @@ int session_display(display_flags flags)
 static int session_count_response(struct jool_response *response, void *arg)
 {
 	if (response->payload_len != sizeof(__u64)) {
-		log_err("Jool's response is not the expected integer.");
+		log_errf("Jool's response is not the expected integer.");
 		return -EINVAL;
 	}
 

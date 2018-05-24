@@ -28,21 +28,21 @@ void modsocket_send(void *request, size_t request_len)
 
 	msg = nlmsg_alloc();
 	if (!msg) {
-		log_err("Could not allocate the request to kernelspace.");
-		log_err("(I guess we're out of memory.)");
+		log_errf("Could not allocate the request to kernelspace.");
+		log_errf("(I guess we're out of memory.)");
 		return;
 	}
 
 	if (!genlmsg_put(msg, NL_AUTO_PORT, NL_AUTO_SEQ, family, 0, 0,
 			JOOL_COMMAND, 1)) {
-		log_err("Unknown error building the packet to the kernel.");
+		log_errf("Unknown error building the packet to the kernel.");
 		nlmsg_free(msg);
 		return;
 	}
 
 	error = nla_put(msg, ATTR_DATA, request_len, request);
 	if (error) {
-		log_err("Could not write on the packet to kernelspace.");
+		log_errf("Could not write on the packet to kernelspace.");
 		netlink_print_error(error);
 		nlmsg_free(msg);
 		return;
@@ -51,14 +51,14 @@ void modsocket_send(void *request, size_t request_len)
 	log_debug("Sending %zu bytes to the kernel.", request_len);
 	error = nl_send_auto(sk, msg);
 	if (error < 0) {
-		log_err("Could not dispatch the request to kernelspace.");
+		log_errf("Could not dispatch the request to kernelspace.");
 		netlink_print_error(error);
 		/* Fall through. */
 	}
 
 	nlmsg_free(msg);
 
-	log_debug("Sent.\n");
+	log_debugf("Sent.\n");
 }
 
 static void send_ack(void)
@@ -175,7 +175,7 @@ static int updated_entries_cb(struct nl_msg *msg, void *arg)
 	struct jool_response response;
 	int error;
 
-	log_debug("Received a packet from kernelspace.");
+	log_debugf("Received a packet from kernelspace.");
 
 	error = genlmsg_parse(nlmsg_hdr(msg), 0, attrs, __ATTR_MAX, NULL);
 	if (error) {
@@ -184,18 +184,18 @@ static int updated_entries_cb(struct nl_msg *msg, void *arg)
 	}
 
 	if (!attrs[ATTR_DATA]) {
-		log_err("The request from kernelspace lacks a DATA attribute.");
+		log_errf("The request from kernelspace lacks a DATA attribute.");
 		return -EINVAL;
 	}
 
 	data = nla_data(attrs[ATTR_DATA]);
 	if (!data) {
-		log_err("The request from kernelspace is empty!");
+		log_errf("The request from kernelspace is empty!");
 		return -EINVAL;
 	}
 	data_size = nla_len(attrs[ATTR_DATA]);
 	if (!data_size) {
-		log_err("The request from kernelspace has zero bytes.");
+		log_errf("The request from kernelspace has zero bytes.");
 		return -EINVAL;
 	}
 
@@ -228,8 +228,8 @@ int modsocket_setup(void)
 
 	sk = nl_socket_alloc();
 	if (!sk) {
-		log_err("Could not allocate the socket to kernelspace.");
-		log_err("(I guess we're out of memory.)");
+		log_errf("Could not allocate the socket to kernelspace.");
+		log_errf("(I guess we're out of memory.)");
 		return -1;
 	}
 
@@ -243,20 +243,20 @@ int modsocket_setup(void)
 	error = nl_socket_modify_cb(sk, NL_CB_VALID, NL_CB_CUSTOM,
 			updated_entries_cb, NULL);
 	if (error) {
-		log_err("Couldn't modify receiver socket's callbacks.");
+		log_errf("Couldn't modify receiver socket's callbacks.");
 		goto fail;
 	}
 
 	error = genl_connect(sk);
 	if (error) {
-		log_err("Could not open the socket to kernelspace.");
+		log_errf("Could not open the socket to kernelspace.");
 		goto fail;
 	}
 
 	family = genl_ctrl_resolve(sk, GNL_JOOL_FAMILY_NAME);
 	if (family < 0) {
-		log_err("Jool's socket family doesn't seem to exist.");
-		log_err("(This probably means Jool hasn't been modprobed.)");
+		log_errf("Jool's socket family doesn't seem to exist.");
+		log_errf("(This probably means Jool hasn't been modprobed.)");
 		error = family;
 		goto fail;
 	}
@@ -264,14 +264,14 @@ int modsocket_setup(void)
 	family_mc_grp = genl_ctrl_resolve_grp(sk, GNL_JOOL_FAMILY_NAME,
 			GNL_JOOLD_MULTICAST_GRP_NAME);
 	if (family_mc_grp < 0) {
-		log_err("Unable to resolve the Netlink multicast group.");
+		log_errf("Unable to resolve the Netlink multicast group.");
 		error = family_mc_grp;
 		goto fail;
 	}
 
 	error = nl_socket_add_membership(sk, family_mc_grp);
 	if (error) {
-		log_err("Can't register to the Netlink multicast group.");
+		log_errf("Can't register to the Netlink multicast group.");
 		goto fail;
 	}
 

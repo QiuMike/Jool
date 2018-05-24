@@ -67,7 +67,7 @@ int pool6_display(display_flags flags)
 		if (args.row_count > 0)
 			log_info("  (Fetched %u entries.)", args.row_count);
 		else
-			log_info("  (empty)");
+			log_infof("  (empty)");
 	}
 
 	return 0;
@@ -76,7 +76,7 @@ int pool6_display(display_flags flags)
 static int pool6_count_response(struct jool_response *response, void *arg)
 {
 	if (response->payload_len != sizeof(__u64)) {
-		log_err("Jool's response is not the expected integer.");
+		log_errf("Jool's response is not the expected integer.");
 		return -EINVAL;
 	}
 
@@ -108,8 +108,8 @@ int pool6_add(struct ipv6_prefix *prefix, bool force)
 	union request_pool6 *payload = (union request_pool6 *)(request + HDR_LEN);
 
 	if (!force && get_ubit(prefix)) {
-		log_err("Warning: The u-bit is nonzero; see https://github.com/NICMx/Jool/issues/174.");
-		log_err("Will cancel the operation. Use --force to override this.");
+		log_errf("Warning: The u-bit is nonzero; see https://github.com/NICMx/Jool/issues/174.");
+		log_errf("Will cancel the operation. Use --force to override this.");
 		return -EINVAL;
 	}
 

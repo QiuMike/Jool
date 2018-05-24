@@ -178,7 +178,7 @@ int pool4_display(display_flags flags)
 		if (count > 0)
 			log_info("  (Fetched %u samples.)", count);
 		else
-			log_info("  (empty)");
+			log_infof("  (empty)");
 	}
 
 	return 0;
@@ -186,8 +186,8 @@ int pool4_display(display_flags flags)
 
 int pool4_count(void)
 {
-	log_err("Sorry; --pool4 --count is not implemented anymore.");
-	log_err("See https://github.com/NICMx/pool4-usage-analyzer");
+	log_errf("Sorry; --pool4 --count is not implemented anymore.");
+	log_errf("See https://github.com/NICMx/pool4-usage-analyzer");
 	return -EINVAL;
 }
 

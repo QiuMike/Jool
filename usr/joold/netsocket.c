@@ -143,8 +143,8 @@ int read_json(int argc, char **argv, cJSON **result)
 
 	json = cJSON_Parse(file);
 	if (!json) {
-		log_err("JSON syntax error.");
-		log_err("The JSON parser got confused around about here:");
+		log_errf("JSON syntax error.");
+		log_errf("The JSON parser got confused around about here:");
 		log_err("%s", cJSON_GetErrorPtr());
 		free(file);
 		return 1;
@@ -180,7 +180,7 @@ static int try_address(struct netsocket_config *config)
 		return 1;
 	}
 
-	log_info("The socket to the network was created.");
+	log_infof("The socket to the network was created.");
 	return 0;
 }
 
@@ -203,14 +203,14 @@ static int create_socket(struct netsocket_config *config)
 
 	bound_address = addr_candidates;
 	while (bound_address) {
-		log_info("Trying an address candidate...");
+		log_infof("Trying an address candidate...");
 		err = try_address(config);
 		if (!err)
 			return 0;
 		bound_address = bound_address->ai_next;
 	}
 
-	log_err("None of the candidates yielded a valid socket.");
+	log_errf("None of the candidates yielded a valid socket.");
 	freeaddrinfo(addr_candidates);
 	return 1;
 }
@@ -233,7 +233,7 @@ static int mcast4opt_add_membership(struct netsocket_config *cfg)
 		return 1;
 	}
 
-	log_info("-> We're now registered to the multicast group.");
+	log_infof("-> We're now registered to the multicast group.");
 	return 0;
 }
 
@@ -247,7 +247,7 @@ static int mcast4opt_disable_loopback(void)
 		return 1;
 	}
 
-	log_info("-> Multicast loopback disabled.");
+	log_infof("-> Multicast loopback disabled.");
 	return 0;
 }
 
@@ -262,7 +262,7 @@ static int mcast4opt_set_ttl(struct netsocket_config *cfg)
 		return 1;
 	}
 
-	log_info("-> Tweaked the TTL of multicasts.");
+	log_infof("-> Tweaked the TTL of multicasts.");
 	return 0;
 }
 
@@ -281,7 +281,7 @@ static int mcast4opt_set_out_interface(struct netsocket_config *cfg)
 		return 1;
 	}
 
-	log_info("-> The outgoing interface was overridden.");
+	log_infof("-> The outgoing interface was overridden.");
 	return 0;
 }
 
@@ -326,7 +326,7 @@ static int mcast6opt_add_membership(struct netsocket_config *cfg)
 		return 1;
 	}
 
-	log_info("We're now registered to the multicast group.");
+	log_infof("We're now registered to the multicast group.");
 	return 0;
 }
 
@@ -340,7 +340,7 @@ static int mcast6opt_disable_loopback(void)
 		return 1;
 	}
 
-	log_info("Multicast loopback disabled.");
+	log_infof("Multicast loopback disabled.");
 	return 0;
 }
 
@@ -355,7 +355,7 @@ static int mcast6opt_set_ttl(struct netsocket_config *cfg)
 		return 1;
 	}
 
-	log_info("Tweaked the TTL of multicasts.");
+	log_infof("Tweaked the TTL of multicasts.");
 	return 0;
 }
 
@@ -378,7 +378,7 @@ static int mcast6opt_set_out_interface(struct netsocket_config *cfg)
 		return 1;
 	}
 
-	log_info("The outgoing interface was overridden.");
+	log_infof("The outgoing interface was overridden.");
 	return 0;
 }
 
@@ -403,7 +403,7 @@ static int handle_mcast6_opts(struct netsocket_config *cfg)
 
 static int adjust_mcast_opts(struct netsocket_config *cfg)
 {
-	log_info("Configuring multicast options on the socket...");
+	log_infof("Configuring multicast options on the socket...");
 
 	switch (bound_address->ai_family) {
 	case AF_INET:
@@ -459,7 +459,7 @@ void *netsocket_listen(void *arg)
 	char buffer[JOOLD_MAX_PAYLOAD];
 	int bytes;
 
-	log_info("Listening...");
+	log_infof("Listening...");
 
 	do {
 		bytes = recv(sk, buffer, sizeof(buffer), 0);

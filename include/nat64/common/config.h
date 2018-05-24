@@ -276,9 +276,6 @@ union request_pool {
 		/** The addresses the user wants to remove from the pool. */
 		struct ipv4_prefix addrs;
 	} rm;
-	struct {
-		/* Nothing needed here. */
-	} flush;
 };
 
 /**
@@ -290,9 +287,6 @@ union request_eamt {
 		struct ipv4_prefix prefix4;
 	} display;
 	struct {
-		/* Nothing needed here. */
-	} count;
-	struct {
 		struct ipv6_prefix prefix6;
 		struct ipv4_prefix prefix4;
 		config_bool force;
@@ -303,9 +297,6 @@ union request_eamt {
 		config_bool prefix4_set;
 		struct ipv4_prefix prefix4;
 	} rm;
-	struct {
-		/* Nothing needed here ATM. */
-	} flush;
 };
 
 /**
@@ -326,9 +317,6 @@ struct request_bib {
 			 */
 			struct ipv4_transport_addr addr4;
 		} display;
-		struct {
-			/* Nothing needed here. */
-		} count;
 		struct {
 			/**
 			 * The IPv6 transport address of the entry the user
@@ -376,9 +364,6 @@ struct request_session {
 			 */
 			struct taddr4_tuple offset;
 		} display;
-		struct {
-			/* Nothing needed here. */
-		} count;
 	};
 };
 

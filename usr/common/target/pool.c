@@ -64,7 +64,7 @@ int pool_display(enum config_mode mode, display_flags flags)
 		if (args.row_count > 0)
 			log_info("  (Fetched %u entries.)", args.row_count);
 		else
-			log_info("  (empty)");
+			log_infof("  (empty)");
 	}
 
 	return 0;
@@ -73,7 +73,7 @@ int pool_display(enum config_mode mode, display_flags flags)
 static int count_response(struct jool_response *response, void *arg)
 {
 	if (response->payload_len != sizeof(__u64)) {
-		log_err("Jool's response is not the expected integer.");
+		log_errf("Jool's response is not the expected integer.");
 		return -EINVAL;
 	}
 

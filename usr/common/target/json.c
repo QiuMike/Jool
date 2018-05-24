@@ -98,7 +98,7 @@ static int print_datatype_error(const char *field, cJSON *json, char *expected)
 	}
 
 	if (strcmp(expected, "boolean") == 0 || strcmp(expected, "int") == 0)
-		log_err("(Note: Quotation marks might also be the problem.)");
+		log_errf("(Note: Quotation marks might also be the problem.)");
 
 	return -EINVAL;
 }
@@ -139,7 +139,7 @@ static int do_parsing(char *buffer)
 
 	cJSON *json = cJSON_Parse(buffer);
 	if (!json) {
-		log_err("The JSON parser got confused around about here:");
+		log_errf("The JSON parser got confused around about here:");
 		log_err("%s", cJSON_GetErrorPtr());
 		return -EINVAL;
 	}
@@ -184,7 +184,7 @@ static struct nl_buffer *buffer_alloc(enum parse_section section)
 
 	buffer = nlbuffer_alloc();
 	if (!buffer) {
-		log_err("Out of memory.");
+		log_errf("Out of memory.");
 		return NULL;
 	}
 
@@ -264,7 +264,7 @@ static int parse_siit_json(cJSON *json)
 
 	globals_found = create_globals_found_array();
 	if (!globals_found) {
-		log_err("Out of memory.");
+		log_errf("Out of memory.");
 		return -ENOMEM;
 	}
 
@@ -317,7 +317,7 @@ static int parse_nat64_json(cJSON *json)
 
 	globals_found = create_globals_found_array();
 	if (!globals_found) {
-		log_err("Out of memory.");
+		log_errf("Out of memory.");
 		return -ENOMEM;
 	}
 
@@ -467,7 +467,7 @@ static int write_plateaus(struct nl_buffer *buffer, cJSON *root)
 	size = sizeof(struct global_value) + i * sizeof(__u16);
 	chunk = malloc(size);
 	if (!chunk) {
-		log_err("Out of memory.");
+		log_errf("Out of memory.");
 		return -ENOMEM;
 	}
 
@@ -837,6 +837,6 @@ static int handle_bib(cJSON *json)
 	 *
 	 * I'm not getting my hopes up.
 	 */
-	log_err("Sorry; BIB atomic configuration is not implemented.");
+	log_errf("Sorry; BIB atomic configuration is not implemented.");
 	return -EINVAL;
 }
