@@ -39,8 +39,7 @@ Description: Kernel-based SIIT and NAT64 (IP/ICMP translation)
 Package: jool-utils
 Architecture: any
 Depends: ${shlibs:Depends},
-	${misc:Depends},
-	libnl-genl-3-200
+	${misc:Depends}
 Recommends: jool-dkms
 Description: Userspace configuration clients for the Jool kernel modules
 	This package contains the userspace configuration clients that can

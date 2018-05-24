@@ -12,13 +12,50 @@ man_MANS = jool.8
 
 
 # https://stackoverflow.com/questions/30379837
-# I had to collapse all the files into the same (this) directory,
-# because portable make is a massive wuss and throws a tantrum
-# whenever we want to `$(dir a/b/c.txt)`.
+#
+# We used to suffer from the same problem. And the accepted solution would have
+# been fine, except we have several common directories; not just one.
+#
+# (For the purposes of this discussion, keep in mind that when I say "proxy
+# file", I'm referring to those .c files that only #include some other .c file.)
+#
+# I would have liked to do something like this:
+#
+#	jool_common_SOURCES = common/stateful/xlat.c common/netlink/config.c usr/common/argp_options.c <etc etc>
+#	$(jool_stateful_SOURCES):
+#		echo "#include \"$(top_builddir)/../$@\"" > $@
+#
+# But it doesn't work because `echo` cannot send its output to a file whose
+# parent directories haven't been `mkdir`d.
+# And I cannot `mkdir` because we do not have access to the GNU Make file name
+# functions (Debian packaging wants us to use stock make for the sake of
+# portability), so I can't find a way to obtain the parent directories of the
+# `jool_common_SOURCES` files. (Which is really sad because extracting
+# `common/stateful` out of `common/stateful/xlat.c` should be pancakes.)
+#
+# The least intrusive solution that I found with my limited make skills was to
+# separate `jool_stateful_SOURCES` into several `_SOURCE` variables, one for
+# each directory that we need to extract common source from. In this way, the
+# `_SOURCE` variable only contains the name of the files, and the directory they
+# belong to is encoded in their respective build rule.
+#
+# Not including the directories in the `_SOURCE` variables, in turn, forced me
+# to place all the proxy files in the same directory (because of `> $@`).
+#
+# That should have been all, but there's still one problem: One consequence of
+# our inability to rename proxy files or place them in special directories is
+# that it's impossible for .gitignore to tell the difference between a proxy
+# file and a normal .c file. (Proxy files should not be repositoried.) I don't
+# want to enumerate proxy files in .gitignore one by one, so I came up with the
+# idea of moving all normal .c files into `../src/`, and reserve `./`,
+# `../stateless/` and `../joold/` for proxy files.
+#
+# So here's a rule: DO NOT add any real .c files to this directory; it's
+# reserved for proxy .c files.
 
-jool_xlat_SOURCES = xlat.c
-jool_nl_SOURCES = config.c
-jool_usrcommon_SOURCES = \
+jool_stateful_SOURCES = xlat.c
+jool_netlink_SOURCES = config.c
+jool_src_SOURCES = \
 	argp_options.c \
 	cJSON.c \
 	dns.c \
@@ -40,24 +77,24 @@ jool_target_SOURCES = \
 	session.c
 
 nodist_jool_SOURCES = \
-	$(jool_xlat_SOURCES) \
-	$(jool_nl_SOURCES) \
-	$(jool_usrcommon_SOURCES) \
+	$(jool_stateful_SOURCES) \
+	$(jool_netlink_SOURCES) \
+	$(jool_src_SOURCES) \
 	$(jool_target_SOURCES)
 CLEANFILES = \
-	$(jool_xlat_SOURCES) \
-	$(jool_nl_SOURCES) \
-	$(jool_usrcommon_SOURCES) \
+	$(jool_stateful_SOURCES) \
+	$(jool_netlink_SOURCES) \
+	$(jool_src_SOURCES) \
 	$(jool_target_SOURCES)
 
-$(jool_xlat_SOURCES):
+$(jool_stateful_SOURCES):
 	echo "#include \"$(top_builddir)/../common/stateful/$@\"" > $@
 
-$(jool_nl_SOURCES):
+$(jool_netlink_SOURCES):
 	echo "#include \"$(top_builddir)/../common/netlink/$@\"" > $@
 
-$(jool_usrcommon_SOURCES):
-	echo "#include \"$(top_builddir)/common/$@\"" > $@
+$(jool_src_SOURCES):
+	echo "#include \"$(top_builddir)/src/$@\"" > $@
 
 $(jool_target_SOURCES):
-	echo "#include \"$(top_builddir)/common/target/$@\"" > $@
+	echo "#include \"$(top_builddir)/src/target/$@\"" > $@

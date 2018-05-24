@@ -1,1 +1,3 @@
+# Regarding .c files, only proxies are allowed in this directory.
+# See Makefile.am for details.
 *.c

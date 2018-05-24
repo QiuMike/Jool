@@ -12,13 +12,13 @@ man_MANS = jool_siit.8
 
 
 # https://stackoverflow.com/questions/30379837
-# I had to collapse all the files into the same (this) directory,
-# because portable make is a massive wuss and throws a tantrum
-# whenever we want to `$(dir a/b/c.txt)`.
+#
+# See the corresponding massive comment in ../stateful/Makefile.am for relevant
+# information.
 
-jool_siit_xlat_SOURCES = xlat.c
-jool_siit_nl_SOURCES = config.c
-jool_siit_usrcommon_SOURCES = \
+jool_siit_stateless_SOURCES = xlat.c
+jool_siit_netlink_SOURCES = config.c
+jool_siit_src_SOURCES = \
 	argp_options.c \
 	cJSON.c \
 	dns.c \
@@ -40,24 +40,24 @@ jool_siit_target_SOURCES = \
 	session.c
 
 nodist_jool_siit_SOURCES = \
-	$(jool_siit_xlat_SOURCES) \
-	$(jool_siit_nl_SOURCES) \
-	$(jool_siit_usrcommon_SOURCES) \
+	$(jool_siit_stateless_SOURCES) \
+	$(jool_siit_netlink_SOURCES) \
+	$(jool_siit_src_SOURCES) \
 	$(jool_siit_target_SOURCES)
 CLEANFILES = \
-	$(jool_siit_xlat_SOURCES) \
-	$(jool_siit_nl_SOURCES) \
-	$(jool_siit_usrcommon_SOURCES) \
+	$(jool_siit_stateless_SOURCES) \
+	$(jool_siit_netlink_SOURCES) \
+	$(jool_siit_src_SOURCES) \
 	$(jool_siit_target_SOURCES)
 
-$(jool_siit_xlat_SOURCES):
+$(jool_siit_stateless_SOURCES):
 	echo "#include \"$(top_builddir)/../common/stateless/$@\"" > $@
 
-$(jool_siit_nl_SOURCES):
+$(jool_siit_netlink_SOURCES):
 	echo "#include \"$(top_builddir)/../common/netlink/$@\"" > $@
 
-$(jool_siit_usrcommon_SOURCES):
-	echo "#include \"$(top_builddir)/common/$@\"" > $@
+$(jool_siit_src_SOURCES):
+	echo "#include \"$(top_builddir)/src/$@\"" > $@
 
 $(jool_siit_target_SOURCES):
-	echo "#include \"$(top_builddir)/common/target/$@\"" > $@
+	echo "#include \"$(top_builddir)/src/target/$@\"" > $@

@@ -1,12 +1,6 @@
-rm -f Makefile
-rm -f Makefile.in
-rm -f aclocal.m4
-rm -f compile
-rm -f config.log
-rm -f config.status
-rm -f configure
-rm -f depcomp
-rm -f install-sh
-rm -f missing
-rm -rf autom4te.cache
+#!/bin/bash
 
+# deconf is really only meant for development, so it's allowed to rely on git.
+# Also, I don't want to enumerate the autotools pollution files again;
+# they are already listed in the global gitignore.
+git clean -dfX

@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.68])
 AC_INIT([Jool], [3.5.7], [jool@nic.mx])
-AC_CONFIG_SRCDIR([common/jool.c])
+AC_CONFIG_SRCDIR([src/jool.c])
 AM_INIT_AUTOMAKE([subdir-objects])
 
 # Checks for programs.
