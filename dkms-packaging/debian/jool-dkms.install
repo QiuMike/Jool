@@ -5,7 +5,7 @@ VERSION=$(dpkg-parsechangelog | sed -n 's/^Version: *\([^-]\+\)-.\+/\1/p')
 
 # Copy the kernel module .h and .c files from/ tmp to jool-dkms/.
 for DIRECTORY in mod common include; do
-	for FILE in $(find $DIRECTORY -name *.h -o -name *.c -o -name Makefile); do
+	for FILE in $(find $DIRECTORY -name *.h -o -name *.c -o -name Makefile -o -name Kbuild); do
 		echo $FILE $(dirname usr/src/jool-${VERSION}/$FILE)
 	done
 done

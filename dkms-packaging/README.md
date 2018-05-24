@@ -44,24 +44,58 @@ to create Jool packages.
 
    You can find the resulting files in `/var/lib/dkms/jool`.
 
-# Building DSC/DEB Packages
+# Building official .deb Packages
 
-Prepare:
+The packages that result from these instructions are supposed to conform to the Debian Policy Manual. If you don't care about that and just want convenient .deb packages to install Jool in a few computers, jump to the next section.
 
-		mv debian/ ..
-		cd ..
-		rm -r dkms-packaging/
+Download the official ("upstream") tarball, rename it according to Debian's requirements and extract it:
+
+		wget https://github.com/NICMx/releases/raw/master/Jool/jool_<version>.tar.gz
+		mv jool_<version>.tar.gz jool_<version>.orig.tar.gz
+		tar -xzf jool_<version>.orig.tar.gz
+
+Copy `debian/` (next to this README) to the directory you just created:
+
+		cd jool-<version>
+		cp -r ~/git/Jool/dkms-packaging/debian .
 
 Update the package metadata. At a minimum,
 
-- `debian/changelog`: Update the version number, the distribution field
-  ("UNRELEASED" at time of writing) and add an entry to the log.
-- `debian/control`: Add yourself to `Uploaders`.
+- `debian/changelog`: Add an entry to the log.
+- `debian/control`: If you haven't done so already, add yourself to `Uploaders`.
 
 Build:
 
-		# Probably remove -us and -uc.
+		# TODO -us and -uc are wrong
 		dpkg-buildpackage -us -uc
+		ls ..
+
+> TODOs
+> 
+> 1. Sign the kernel modules?
+> 2. Sign the upstream tarball
+
+# Building simple .deb packages
+
 		cd ..
-		ls
+		git clean -dfX # Hopefully this will clean everything.
+
+		mv dkms-packaging/debian .
+		# Prevent dpkg-buildpackage from requiring the upstream tarball.
+		echo "1.0" > debian/source/format
+
+		cd usr
+		# Ready the userspace app build.
+		# Recall that you need autotools to be able to run this.
+		./autogen.sh
+		cd ..
+
+		# Create the packages.
+		# (Ignore the source directory name warning.)
+		dpkg-buildpackage -us -uc
+		ls ..
+
+`jool-dkms*.deb` is the package that installs the kernel modules, and `jool-utils*.deb` is the one that contains the userspace apps.
+
+Notice that the `jool-utils` package will be generated for your current architecture only.
 

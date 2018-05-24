@@ -2,7 +2,7 @@
 # "joold" is a "target".
 
 bin_PROGRAMS = joold
-#joold_SOURCES = nothing needed here anymore. See jool_*_SOURCES.
+#joold_SOURCES = nothing needed here anymore. See joold_*_SOURCES.
 
 joold_LDADD = ${LIBNLGENL3_LIBS}
 joold_CFLAGS = -Wall -pedantic -O2
