@@ -48,7 +48,7 @@ to create Jool packages.
 
 The packages that result from these instructions are supposed to conform to the Debian Policy Manual. If you don't care about that and just want convenient .deb packages to install Jool in a few computers, jump to the next section.
 
-Download the official ("upstream") tarball, rename it according to Debian's requirements and extract it:
+Download the official ("upstream") tarball, rename it according to Debian's requirements (ie. add ".orig") and extract it:
 
 		wget https://github.com/NICMx/releases/raw/master/Jool/jool_<version>.tar.gz
 		mv jool_<version>.tar.gz jool_<version>.orig.tar.gz
